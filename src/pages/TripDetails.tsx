@@ -37,6 +37,7 @@ const TripDetailsPage: React.FC = () => {
   const [endDate, setEndDate] = useState("");
   const [preferences, setPreferences] = useState<string[]>([]);
   const [customPref, setCustomPref] = useState("");
+  const [budget, setBudget] = useState<number | string>(""); // numeric input (can be empty string)
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -72,6 +73,17 @@ const TripDetailsPage: React.FC = () => {
       return;
     }
 
+    // optional: basic validation for dates and budget
+    if (!startDate || !endDate) {
+      setError("Please provide trip dates.");
+      return;
+    }
+
+    if (budget !== "" && Number(budget) < 0) {
+      setError("Budget must be a non-negative number.");
+      return;
+    }
+
     setError(null);
     setLoading(true);
     setSuccess(false);
@@ -86,6 +98,7 @@ const TripDetailsPage: React.FC = () => {
         startDate,
         endDate,
         preferences: allPrefs.join(", "),
+        budget: budget === "" ? undefined : Number(budget),
       });
 
       console.log("AI Itinerary:", result);
@@ -93,7 +106,6 @@ const TripDetailsPage: React.FC = () => {
 
       setTimeout(() => {
         navigate("/itinerary", { state: { data: result } });
-
       }, 1200);
     } catch (err) {
       console.error(err);
@@ -178,6 +190,21 @@ const TripDetailsPage: React.FC = () => {
                   <span className="font-medium">{dateInfo()!.nights} {dateInfo()!.nights === 1 ? 'night' : 'nights'}</span>
                 </div>
               )}
+            </div>
+
+            {/* Total Budget (numeric input) */}
+            <div className="space-y-2">
+              <Label className="flex items-center gap-2 text-gray-700">
+                Total Budget
+              </Label>
+              <Input
+                type="number"
+                value={budget}
+                onChange={(e) => setBudget(e.target.value === "" ? "" : Number(e.target.value))}
+                placeholder="Enter total budget"
+                min={0}
+                step={1}
+              />
             </div>
 
             {/* Preferences */}
