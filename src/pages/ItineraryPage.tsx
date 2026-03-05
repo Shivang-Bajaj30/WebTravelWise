@@ -15,6 +15,7 @@ import {
   ArrowLeft,
   DollarSign,
   Clock,
+  Navigation2,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -89,6 +90,40 @@ const DEFAULT_WALK_SPEED_KMH = 5; // conservative walking
 const DEFAULT_DRIVE_SPEED_KMH = 50; // rough average, adjust per country
 
 const MIN_GEO_UPDATE_MS = 2000; // minimum ms between updates (throttle)
+
+/**
+ * Build a Google Maps Directions URL.
+ * - origin = user's current location (if available)
+ * - destination = coordinates (if available) OR fallback to place name search
+ */
+const getDirectionsUrl = (
+  userCoords: Coords | null,
+  destination: { name: string; coordinates?: Coords; address?: string }
+): string => {
+  const base = "https://www.google.com/maps/dir/?api=1";
+
+  // Origin: user's live location
+  const origin = userCoords
+    ? `&origin=${userCoords.lat},${userCoords.lng}`
+    : ""; // omit origin → Google Maps will prompt user for it
+
+  // Destination: prefer coordinates, fallback to name + address search
+  let dest: string;
+  if (
+    destination.coordinates &&
+    typeof destination.coordinates.lat === "number" &&
+    typeof destination.coordinates.lng === "number"
+  ) {
+    dest = `${destination.coordinates.lat},${destination.coordinates.lng}`;
+  } else {
+    // use name + address as a search query
+    dest = encodeURIComponent(
+      [destination.name, destination.address].filter(Boolean).join(", ")
+    );
+  }
+
+  return `${base}${origin}&destination=${dest}&travelmode=driving`;
+};
 
 const ItineraryPage: React.FC = () => {
   const navigate = useNavigate();
@@ -305,11 +340,15 @@ const ItineraryPage: React.FC = () => {
                   ) : (
                     <div className="text-xs text-gray-400">Distance unavailable</div>
                   )}
-                  {p.location && (
-                    <a href={p.location} target="_blank" rel="noopener noreferrer" className="inline-block mt-1 text-sm text-blue-600 hover:underline">
-                      Open in Google Maps
-                    </a>
-                  )}
+                  <a
+                    href={getDirectionsUrl(userCoords, { name: p.name, coordinates: p.coordinates, address: p.details })}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors duration-200"
+                  >
+                    <Navigation2 className="w-3.5 h-3.5" />
+                    Get Directions
+                  </a>
                 </div>
               </motion.div>
             ),
@@ -341,11 +380,15 @@ const ItineraryPage: React.FC = () => {
                   ) : (
                     <div className="text-sm text-gray-400">Distance unavailable</div>
                   )}
-                  {h.location && (
-                    <a href={h.location} target="_blank" rel="noopener noreferrer" className="mt-1 inline-block text-sm text-blue-600 hover:underline">
-                      View on Map
-                    </a>
-                  )}
+                  <a
+                    href={getDirectionsUrl(userCoords, { name: h.name, coordinates: h.coordinates, address: h.address })}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors duration-200"
+                  >
+                    <Navigation2 className="w-3.5 h-3.5" />
+                    Get Directions
+                  </a>
                 </div>
               </motion.div>
             ),
