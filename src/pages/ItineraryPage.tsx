@@ -323,28 +323,39 @@ const ItineraryPage: React.FC = () => {
             data: augPlaces,
             empty: "No place recommendations available.",
             render: (p: any, i: number) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.05 }} className="p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg transition duration-500">
-                {p.image && <img src={p.image} alt={p.name} className="w-full h-44 object-cover rounded-lg mb-3" />}
-                <h3 className="font-semibold text-lg text-gray-900">{p.name}</h3>
-                {p.details && <p className="text-sm text-gray-600 mt-1">{p.details}</p>}
-                <div className="text-sm text-gray-500 mt-2">
-                  <div>🕒 {p.time || "Flexible"} | 💰 {p.pricing || "Free"}</div>
-                  <div>🌤️ Best: {p.bestTime || "All year"}</div>
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.05 }} className="group bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-500 overflow-hidden">
+                {/* Image Section */}
+                <div className="relative h-48 bg-gradient-to-br from-orange-200 via-pink-100 to-blue-200 overflow-hidden">
+                  <img src="/images/places.jpg" alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e: any) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }} />
+                  <div className="hidden w-full h-full items-center justify-center absolute inset-0 bg-gradient-to-br from-orange-200 via-pink-100 to-blue-200">
+                    <MapPin className="w-12 h-12 text-white/60" />
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                  <h3 className="absolute bottom-3 left-4 right-4 font-bold text-lg text-white drop-shadow-lg">{p.name}</h3>
                 </div>
-                <div className="mt-3">
-                  {p.distanceKm !== null && p.distanceKm !== undefined ? (
-                    <>
-                      <div className="text-sm text-gray-700 font-medium">{p.distanceKm} km away</div>
-                      <div className="text-xs text-gray-500">Drive: {p.etaDrive} • Walk: {p.etaWalk}</div>
-                    </>
-                  ) : (
-                    <div className="text-xs text-gray-400">Distance unavailable</div>
+
+                {/* Content Section */}
+                <div className="p-4 space-y-3">
+                  {p.details && <p className="text-sm text-gray-600 leading-relaxed">{p.details}</p>}
+
+                  <div className="flex flex-wrap gap-2">
+                    <span className="inline-flex items-center gap-1 text-xs font-medium bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full">🕒 {p.time || "Flexible"}</span>
+                    <span className="inline-flex items-center gap-1 text-xs font-medium bg-green-50 text-green-700 px-2.5 py-1 rounded-full">💰 {p.pricing || "Free"}</span>
+                    <span className="inline-flex items-center gap-1 text-xs font-medium bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full">🌤️ {p.bestTime || "All year"}</span>
+                  </div>
+
+                  {p.distanceKm !== null && p.distanceKm !== undefined && (
+                    <div className="bg-gray-50 rounded-lg p-2.5">
+                      <div className="text-sm text-gray-800 font-semibold">{p.distanceKm} km away</div>
+                      <div className="text-xs text-gray-500">🚗 {p.etaDrive} • 🚶 {p.etaWalk}</div>
+                    </div>
                   )}
+
                   <a
                     href={getDirectionsUrl(userCoords, { name: p.name, coordinates: p.coordinates, address: p.details })}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors duration-200"
+                    className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-medium rounded-xl shadow-sm transition-all duration-200"
                   >
                     <Navigation2 className="w-3.5 h-3.5" />
                     Get Directions
@@ -359,32 +370,50 @@ const ItineraryPage: React.FC = () => {
             data: augHotels,
             empty: "No hotel data available.",
             render: (h: any, i: number) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.05 }} className="p-4 bg-white rounded-xl shadow-sm border border-gray-100 hover:shadow-lg transition duration-500">
-                {h.image && <img src={h.image} alt={h.name} className="w-full h-44 object-cover rounded-lg mb-3" />}
-                <h3 className="font-semibold text-lg text-gray-900">{h.name}</h3>
-                {h.description && <p className="text-sm text-gray-600 mt-1">{h.description}</p>}
-                <div className="flex items-center gap-4 mt-2">
-                  <span className="text-sm text-gray-700 font-medium">💵 {h.price ?? "N/A"}</span>
-                  <span className="text-sm text-gray-700">⭐ {h.rating ?? "N/A"}</span>
-                </div>
-                {h.address && <p className="text-sm text-gray-500 mt-1">📍 {h.address}</p>}
-                {h.amenities && h.amenities.length > 0 && (
-                  <p className="text-sm text-gray-500 mt-1">🛎️ {h.amenities.join(", ")}</p>
-                )}
-
-                <div className="mt-3">
-                  {h.distanceKm !== null && h.distanceKm !== undefined ? (
-                    <div className="text-sm text-gray-700 font-medium">
-                      {h.distanceKm} km away — Drive: {h.etaDrive} • Walk: {h.etaWalk}
-                    </div>
-                  ) : (
-                    <div className="text-sm text-gray-400">Distance unavailable</div>
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.05 }} className="group bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-xl transition-all duration-500 overflow-hidden">
+                {/* Image Section */}
+                <div className="relative h-48 bg-gradient-to-br from-purple-200 via-indigo-100 to-blue-200 overflow-hidden">
+                  <img src="/images/hotel.png" alt={h.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e: any) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }} />
+                  <div className="hidden w-full h-full items-center justify-center absolute inset-0 bg-gradient-to-br from-purple-200 via-indigo-100 to-blue-200">
+                    <Hotel className="w-12 h-12 text-white/60" />
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                  <h3 className="absolute bottom-3 left-4 right-4 font-bold text-lg text-white drop-shadow-lg">{h.name}</h3>
+                  {h.rating && (
+                    <span className="absolute top-3 right-3 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full shadow">⭐ {h.rating}</span>
                   )}
+                </div>
+
+                {/* Content Section */}
+                <div className="p-4 space-y-3">
+                  {h.description && <p className="text-sm text-gray-600 leading-relaxed">{h.description}</p>}
+
+                  <div className="flex items-center gap-3">
+                    {h.price && <span className="text-sm font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">💵 {h.price}</span>}
+                  </div>
+
+                  {h.address && <p className="text-sm text-gray-500 flex items-start gap-1"><MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0 text-gray-400" /> {h.address}</p>}
+
+                  {h.amenities && h.amenities.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {h.amenities.map((a: string, j: number) => (
+                        <span key={j} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{a}</span>
+                      ))}
+                    </div>
+                  )}
+
+                  {h.distanceKm !== null && h.distanceKm !== undefined && (
+                    <div className="bg-gray-50 rounded-lg p-2.5">
+                      <div className="text-sm text-gray-800 font-semibold">{h.distanceKm} km away</div>
+                      <div className="text-xs text-gray-500">🚗 {h.etaDrive} • 🚶 {h.etaWalk}</div>
+                    </div>
+                  )}
+
                   <a
                     href={getDirectionsUrl(userCoords, { name: h.name, coordinates: h.coordinates, address: h.address })}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors duration-200"
+                    className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-sm font-medium rounded-xl shadow-sm transition-all duration-200"
                   >
                     <Navigation2 className="w-3.5 h-3.5" />
                     Get Directions
