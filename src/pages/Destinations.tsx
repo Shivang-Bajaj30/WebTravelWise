@@ -1,4 +1,17 @@
+import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+
+const fadeInUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i: number) => ({
+    opacity: 1, y: 0,
+    transition: { duration: 0.5, delay: i * 0.1, ease: 'easeOut' as const },
+  }),
+};
+
 const Destinations = () => {
+  const navigate = useNavigate();
+
   const destinations = [
     {
       id: 1,
@@ -57,29 +70,58 @@ const Destinations = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16">
-        <div className="text-center mb-12">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-6">Explore Our Destinations</h2>
-          <p className="text-sm sm:text-base md:text-lg text-gray-600 max-w-xs sm:max-w-md md:max-w-2xl mx-auto">
-            Discover amazing destinations around the world. From bustling cities to serene beaches, find your perfect getaway.
-          </p>
+    <div className="min-h-screen">
+      {/* Hero */}
+      <div className="relative bg-gradient-to-br from-indigo-600 via-blue-600 to-purple-700 dark:from-indigo-800 dark:via-blue-900 dark:to-purple-900 py-20 sm:py-28 overflow-hidden">
+        <div className="absolute inset-0 opacity-20">
+          <div className="absolute top-10 left-10 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-blue-300/10 rounded-full blur-3xl" />
         </div>
+        <div className="relative max-w-3xl mx-auto text-center px-4">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl sm:text-5xl font-extrabold text-white mb-4"
+          >
+            Explore Destinations
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-blue-200 text-lg max-w-xl mx-auto"
+          >
+            Discover amazing destinations around the world. From bustling cities to serene beaches, find your perfect getaway.
+          </motion.p>
+        </div>
+      </div>
 
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
         {/* Destinations Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-16">
-          {destinations.map((destination) => (
-            <div key={destination.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow duration-300">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+        >
+          {destinations.map((destination, i) => (
+            <motion.div
+              key={destination.id}
+              variants={fadeInUp}
+              custom={i}
+              className="group bg-white dark:bg-gray-800/60 rounded-3xl shadow-sm overflow-hidden hover:shadow-xl transition-all duration-500 hover:-translate-y-1 border border-gray-100 dark:border-gray-700/50"
+            >
               {/* Image */}
-              <div className="relative h-48 sm:h-56 bg-gray-200 overflow-hidden">
-                <div 
-                  className="w-full h-full bg-cover bg-center hover:scale-105 transition-transform duration-300"
-                  style={{ 
+              <div className="relative h-52 overflow-hidden">
+                <div
+                  className="w-full h-full bg-cover bg-center group-hover:scale-110 transition-transform duration-700"
+                  style={{
                     backgroundImage: `url(${destination.image})`,
-                    backgroundColor: '#e5e7eb' // fallback color
+                    backgroundColor: '#6366f1'
                   }}
                 />
-                <div className="absolute top-4 right-4 bg-white px-3 py-1 rounded-full text-sm font-semibold text-gray-800">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+                <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold border border-white/20">
                   {destination.duration}
                 </div>
               </div>
@@ -87,22 +129,21 @@ const Destinations = () => {
               {/* Content */}
               <div className="p-6">
                 <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-xl font-bold text-gray-900">{destination.name}</h3>
-                  <span className="text-lg font-semibold text-blue-600">{destination.price}</span>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white">{destination.name}</h3>
+                  <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-3 py-1 rounded-full">{destination.price}</span>
                 </div>
-                
-                <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 leading-relaxed">
                   {destination.description}
                 </p>
 
                 {/* Highlights */}
-                <div className="mb-4">
-                  <h4 className="text-sm font-semibold text-gray-800 mb-2">Highlights:</h4>
+                <div className="mb-5">
                   <div className="flex flex-wrap gap-2">
                     {destination.highlights.map((highlight, index) => (
-                      <span 
+                      <span
                         key={index}
-                        className="bg-blue-50 text-blue-700 px-2 py-1 rounded-md text-xs font-medium"
+                        className="bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 px-2.5 py-1 rounded-lg text-xs font-medium"
                       >
                         {highlight}
                       </span>
@@ -112,17 +153,20 @@ const Destinations = () => {
 
                 {/* Action Buttons */}
                 <div className="flex gap-3">
-                  <button className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-2 px-4 rounded-lg font-semibold hover:from-blue-700 hover:to-blue-800 transition-colors duration-200">
-                    View Details
+                  <button
+                    onClick={() => navigate('/trip-details', { state: { selectedLocation: destination.name } })}
+                    className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-2.5 px-4 rounded-xl font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 text-sm shadow-md hover:shadow-lg"
+                  >
+                    Plan Trip
                   </button>
-                  <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-50 transition-colors duration-200">
+                  <button className="px-4 py-2.5 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200 text-sm">
                     Save
                   </button>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </div>
   );

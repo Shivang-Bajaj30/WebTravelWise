@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom'; // update with correct path
+import { useNavigate } from 'react-router-dom';
 
 interface NominatimResult {
   display_name: string;
@@ -75,17 +75,26 @@ const Home: React.FC = () => {
     }
   };
 
+  const fadeInUp = {
+    hidden: { opacity: 0, y: 30 },
+    visible: (i: number) => ({
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.6, delay: i * 0.15, ease: 'easeOut' as const },
+    }),
+  };
+
   return (
-    <div className="min-h-screen bg-gray-100">
+    <div className="min-h-screen">
       {/* Hero Section */}
-      <div className="relative w-full flex items-center justify-center h-[45vh] sm:h-[60vh] lg:h-[80vh] mt-[-3px]">
+      <div className="relative w-full flex items-center justify-center h-[55vh] sm:h-[65vh] lg:h-[85vh] mt-[-3px] overflow-hidden">
         {isAnimating && prevImageIndex !== null && (
           <motion.div
             key={images[prevImageIndex] + '-prev'}
             className="absolute inset-0 w-full h-full bg-cover bg-center"
             style={{
               backgroundImage: `url(${images[prevImageIndex]})`,
-              filter: 'brightness(0.75)',
+              filter: 'brightness(0.55)',
             }}
             initial={{ opacity: 1 }}
             animate={{ opacity: 0 }}
@@ -97,97 +106,276 @@ const Home: React.FC = () => {
           className="absolute inset-0 w-full h-full bg-cover bg-center"
           style={{
             backgroundImage: `url(${images[currentImageIndex]})`,
-            filter: 'brightness(0.65)',
+            filter: 'brightness(0.45)',
           }}
-          initial={{ opacity: prevImageIndex === null ? 1 : 0 }}
-          animate={{ opacity: 1 }}
+          initial={{ opacity: prevImageIndex === null ? 1 : 0, scale: 1.05 }}
+          animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: prevImageIndex === null ? 0 : 0.7, ease: 'easeInOut' }}
         />
-        <div className="relative z-10 flex flex-col items-center px-4 text-center w-full max-w-3xl mx-auto">
-          <h1 className="text-white font-bold mb-4 leading-tight text-2xl sm:text-4xl md:text-5xl lg:text-6xl" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.35)' }}>
-            Discover Your Next Adventure
-          </h1>
-          <p className="text-white mb-4 max-w-xs sm:max-w-md md:max-w-lg lg:max-w-2xl text-sm sm:text-lg md:text-xl lg:text-2xl" style={{ textShadow: '0 2px 8px rgba(0,0,0,0.25)' }}>
-            Plan your perfect trip with TravelWise – explore breathtaking destinations and curated packages.
-          </p>
-          <form onSubmit={handleSearch} className="flex flex-col sm:flex-row gap-2 w-full max-w-xs sm:max-w-md relative z-[1010]">
-            <div className="relative w-full sm:w-auto flex-1">
+        {/* Gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
+
+        <div className="relative z-10 flex flex-col items-center px-4 text-center w-full max-w-4xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md border border-white/20 rounded-full px-5 py-2 mb-6"
+          >
+            <span className="text-sm">✨</span>
+            <span className="text-white/90 text-sm font-medium">AI-Powered Trip Planning</span>
+          </motion.div>
+
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-white font-extrabold mb-5 leading-tight text-3xl sm:text-5xl md:text-6xl lg:text-7xl"
+            style={{ textShadow: '0 4px 20px rgba(0,0,0,0.3)' }}
+          >
+            Discover Your Next
+            <span className="block bg-gradient-to-r from-indigo-300 via-purple-300 to-teal-300 bg-clip-text text-transparent">
+              Adventure
+            </span>
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-white/80 mb-8 max-w-xs sm:max-w-lg md:max-w-2xl text-sm sm:text-lg md:text-xl"
+          >
+            Plan your perfect trip with TravelWise – AI generates personalized itineraries with hotels, places, and real-time navigation.
+          </motion.p>
+
+          <motion.form
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            onSubmit={handleSearch}
+            className="flex flex-col sm:flex-row gap-3 w-full max-w-md sm:max-w-xl relative z-[1010]"
+          >
+            <div className="relative w-full flex-1">
+              <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              </div>
               <input
                 type="text"
                 ref={inputRef}
                 value={location}
                 onChange={(e: React.ChangeEvent<HTMLInputElement>) => setLocation(e.target.value)}
                 placeholder="Where would you like to go?"
-                className="px-4 py-2 rounded-lg text-sm sm:text-base w-full bg-white border border-gray-200 shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600 text-gray-900"
+                className="pl-12 pr-4 py-3.5 rounded-2xl text-sm sm:text-base w-full bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-white/30 shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900 dark:text-white placeholder-gray-400"
               />
               {showSuggestions && suggestions.length > 0 && (
-
-                <ul
-  className="absolute top-full left-0 w-full bg-white border border-gray-300 rounded-md shadow-md mt-1 z-[1000] max-h-60 overflow-y-auto"
->
-  {suggestions.map((suggestion, index) => (
-    <li
-      key={index}
-      onClick={() => handleSuggestionClick(suggestion)}
-      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-    >
-      {suggestion.display_name}
-    </li>
-  ))}
-</ul>
-
+                <ul className="absolute top-full left-0 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl mt-2 z-[1000] max-h-60 overflow-y-auto">
+                  {suggestions.map((suggestion, index) => (
+                    <li
+                      key={index}
+                      onClick={() => handleSuggestionClick(suggestion)}
+                      className="px-4 py-3 hover:bg-indigo-50 dark:hover:bg-indigo-500/10 cursor-pointer text-gray-700 dark:text-gray-300 text-sm"
+                    >
+                      {suggestion.display_name}
+                    </li>
+                  ))}
+                </ul>
               )}
             </div>
             <button
               type="submit"
-              className="bg-gradient-to-r from-orange-500 to-red-600 text-white px-4 py-2 rounded-lg text-sm sm:text-base font-semibold hover:from-orange-600 hover:to-red-700 transition-colors duration-200"
+              className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-7 py-3.5 rounded-2xl text-sm sm:text-base font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:scale-[1.02] active:scale-[0.98]"
             >
-              Search
+              Explore
             </button>
-          </form>
+          </motion.form>
         </div>
+
+        {/* Scroll indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.5 }}
+          className="absolute bottom-6 left-1/2 -translate-x-1/2"
+        >
+          <div className="w-6 h-10 rounded-full border-2 border-white/40 flex items-start justify-center p-1.5">
+            <motion.div
+              animate={{ y: [0, 12, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+              className="w-1.5 h-1.5 bg-white/80 rounded-full"
+            />
+          </div>
+        </motion.div>
       </div>
 
-      {/* Featured Section */}
-      <section className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-6 text-center">Popular Destinations</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[
-            {
-              name: 'Santorini, Greece',
-              image: '/images/bg1.jpg',
-              description: 'Whitewashed villages, blue domes, and breathtaking sunsets over the Aegean Sea.'
-            },
-            {
-              name: 'Kyoto, Japan',
-              image: '/images/bg2.jpg',
-              description: 'Ancient temples, cherry blossoms, and tranquil gardens in the heart of Japan.'
-            },
-            {
-              name: 'Swiss Alps',
-              image: '/images/mountains.jpg',
-              description: 'Majestic peaks, alpine lakes, and world-class hiking and skiing.'
-            }
-          ].map((dest, i) => (
-            <div key={i} className="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col transition-transform hover:scale-105 hover:shadow-2xl border border-gray-100">
-              <div className="h-40 sm:h-48 md:h-56 w-full relative">
-                <img
-                  src={dest.image}
-                  alt={dest.name}
-                  className="object-cover w-full h-full"
-                  style={{ filter: 'brightness(0.92)' }}
-                />
-                <div className="absolute top-2 right-2 bg-white bg-opacity-80 rounded-full px-3 py-1 text-xs font-bold text-gray-700 shadow">Featured</div>
-              </div>
-              <div className="p-5 flex flex-col flex-1">
-                <h3 className="text-xl font-bold text-gray-900 mb-1">{dest.name}</h3>
-                <p className="text-gray-600 mt-1 text-base flex-1">{dest.description}</p>
-                <button className="mt-4 bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold px-5 py-2 rounded-lg shadow hover:from-blue-600 hover:to-purple-600 transition-all duration-200 w-max self-start">
-                  Learn More
-                </button>
-              </div>
-            </div>
-          ))}
+      {/* How It Works */}
+      <section className="py-16 sm:py-24 px-4 bg-white dark:bg-gray-900/50">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-50px' }}
+            className="text-center mb-14"
+          >
+            <motion.span variants={fadeInUp} custom={0} className="text-indigo-600 dark:text-indigo-400 font-semibold text-sm uppercase tracking-wider">
+              Simple Process
+            </motion.span>
+            <motion.h2 variants={fadeInUp} custom={1} className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 dark:text-white mt-3">
+              How It Works
+            </motion.h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {[
+              { step: '01', title: 'Choose Destination', desc: 'Enter where you want to go and your travel dates.', icon: '🗺️', color: 'from-indigo-500 to-blue-500' },
+              { step: '02', title: 'AI Generates Plan', desc: 'Our AI creates a personalized itinerary with hotels, places & costs.', icon: '🤖', color: 'from-purple-500 to-pink-500' },
+              { step: '03', title: 'Explore & Navigate', desc: 'Get real-time directions, distances, and ETAs to each spot.', icon: '🧭', color: 'from-teal-500 to-emerald-500' },
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={fadeInUp}
+                custom={i}
+                className="group relative bg-white dark:bg-gray-800/60 rounded-3xl p-8 shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-xl transition-all duration-500 hover:-translate-y-1"
+              >
+                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center text-2xl mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                  {item.icon}
+                </div>
+                <span className="text-xs font-bold text-indigo-400 dark:text-indigo-500 uppercase tracking-widest">Step {item.step}</span>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mt-2 mb-3">{item.title}</h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Popular Destinations */}
+      <section className="py-16 sm:py-24 px-4">
+        <div className="max-w-7xl mx-auto">
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, margin: '-50px' }}
+            className="text-center mb-14"
+          >
+            <motion.span variants={fadeInUp} custom={0} className="text-indigo-600 dark:text-indigo-400 font-semibold text-sm uppercase tracking-wider">
+              Top Picks
+            </motion.span>
+            <motion.h2 variants={fadeInUp} custom={1} className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-gray-900 dark:text-white mt-3">
+              Popular Destinations
+            </motion.h2>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              {
+                name: 'Santorini, Greece',
+                image: '/images/bg1.jpg',
+                description: 'Whitewashed villages, blue domes, and breathtaking sunsets over the Aegean Sea.',
+              },
+              {
+                name: 'Kyoto, Japan',
+                image: '/images/bg2.jpg',
+                description: 'Ancient temples, cherry blossoms, and tranquil gardens in the heart of Japan.',
+              },
+              {
+                name: 'Swiss Alps',
+                image: '/images/mountains.jpg',
+                description: 'Majestic peaks, alpine lakes, and world-class hiking and skiing.',
+              },
+            ].map((dest, i) => (
+              <motion.div
+                key={i}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={fadeInUp}
+                custom={i}
+                className="group bg-white dark:bg-gray-800/60 rounded-3xl shadow-sm overflow-hidden flex flex-col transition-all duration-500 hover:shadow-xl hover:-translate-y-1 border border-gray-100 dark:border-gray-700/50"
+              >
+                <div className="h-48 sm:h-56 w-full relative overflow-hidden">
+                  <img
+                    src={dest.image}
+                    alt={dest.name}
+                    className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                  <div className="absolute top-3 right-3 bg-white/20 backdrop-blur-md rounded-full px-3 py-1 text-xs font-bold text-white border border-white/20">
+                    Featured
+                  </div>
+                  <h3 className="absolute bottom-4 left-5 text-xl font-bold text-white drop-shadow-lg">{dest.name}</h3>
+                </div>
+                <div className="p-6 flex flex-col flex-1">
+                  <p className="text-gray-600 dark:text-gray-400 text-sm flex-1 leading-relaxed">{dest.description}</p>
+                  <button
+                    onClick={() => navigate('/trip-details', { state: { selectedLocation: dest.name } })}
+                    className="mt-5 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold px-6 py-2.5 rounded-xl shadow-md hover:from-indigo-600 hover:to-purple-600 hover:shadow-lg hover:shadow-indigo-500/20 transition-all duration-300 w-max self-start text-sm"
+                  >
+                    Plan Trip →
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-16 sm:py-20 px-4 bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 dark:from-indigo-800 dark:via-purple-900 dark:to-indigo-900 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-white/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-0 right-1/4 w-72 h-72 bg-purple-300/10 rounded-full blur-3xl" />
+        </div>
+        <div className="max-w-5xl mx-auto relative z-10">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            {[
+              { value: '10K+', label: 'Trips Planned' },
+              { value: '150+', label: 'Destinations' },
+              { value: '50K+', label: 'Happy Travelers' },
+              { value: '4.9', label: 'App Rating' },
+            ].map((stat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+              >
+                <div className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white mb-2">{stat.value}</div>
+                <div className="text-indigo-200 text-sm sm:text-base font-medium">{stat.label}</div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 sm:py-24 px-4">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-gradient-to-br from-indigo-50 via-purple-50 to-teal-50 dark:from-indigo-950/50 dark:via-purple-950/30 dark:to-teal-950/20 rounded-3xl p-10 sm:p-16 border border-indigo-100 dark:border-indigo-800/50"
+          >
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white mb-4">
+              Ready to Start Your Journey?
+            </h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-8 max-w-xl mx-auto text-base sm:text-lg">
+              Let our AI plan your perfect trip in minutes. Enter a destination and get a complete itinerary with hotels, attractions, and real-time directions.
+            </p>
+            <button
+              onClick={() => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                inputRef.current?.focus();
+              }}
+              className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold px-8 py-4 rounded-2xl shadow-lg shadow-indigo-500/30 hover:shadow-indigo-500/50 hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 hover:scale-105 text-sm sm:text-base"
+            >
+              Plan Your Trip Now ✨
+            </button>
+          </motion.div>
         </div>
       </section>
     </div>

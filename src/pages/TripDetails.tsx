@@ -117,19 +117,19 @@ const TripDetailsPage: React.FC = () => {
 
   return (
     <motion.div
-      className="min-h-[88vh] flex items-center justify-center bg-gradient-to-br from-orange-50 via-white to-red-50 p-6"
+      className="min-h-[88vh] flex items-center justify-center bg-gradient-to-br from-indigo-50/50 via-background to-purple-50/50 dark:from-indigo-950/30 dark:via-background dark:to-purple-950/30 p-4 sm:p-6"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
     >
-      <Card className="max-w-3xl w-full shadow-2xl bg-white/90 border border-white/40 backdrop-blur-xl rounded-2xl">
+      <Card className="max-w-3xl w-full shadow-xl bg-white/90 dark:bg-gray-800/90 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-xl rounded-3xl">
         <CardHeader className="text-center space-y-2">
-          <CardTitle className="text-3xl font-extrabold text-gray-900">
+          <CardTitle className="text-3xl font-extrabold text-gray-900 dark:text-white">
             ✈️ Plan Your Dream Trip
           </CardTitle>
-          <p className="text-gray-600">
+          <p className="text-gray-600 dark:text-gray-400">
             Destination:{" "}
-            <span className="font-semibold text-orange-600">
+            <span className="font-semibold text-indigo-600 dark:text-indigo-400">
               {selectedLocation || "Not selected"}
             </span>
           </p>
@@ -139,22 +139,24 @@ const TripDetailsPage: React.FC = () => {
           <form onSubmit={handleSubmit} className="grid md:grid-cols-2 gap-6">
             {/* Travelers */}
             <div className="space-y-2">
-              <Label className="flex items-center gap-2 text-gray-700">
-                <Users className="w-5 h-5 text-orange-600" /> Travelers
+              <Label className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                <Users className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /> Travelers
               </Label>
               <div className="flex items-center gap-3">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setTravelers(Math.max(1, travelers - 1))}
+                  className="dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                 >
                   <Minus className="w-4 h-4" />
                 </Button>
-                <span className="text-lg font-semibold">{travelers}</span>
+                <span className="text-lg font-semibold text-gray-900 dark:text-white">{travelers}</span>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => setTravelers(travelers + 1)}
+                  className="dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
                 >
                   <Plus className="w-4 h-4" />
                 </Button>
@@ -163,8 +165,8 @@ const TripDetailsPage: React.FC = () => {
 
             {/* Dates */}
             <div className="space-y-2">
-              <Label className="flex items-center gap-2 text-gray-700">
-                <Calendar className="w-5 h-5 text-orange-600" /> Trip Dates
+              <Label className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                <Calendar className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /> Trip Dates
               </Label>
               <div className="grid grid-cols-2 gap-3">
                 <Input
@@ -173,6 +175,7 @@ const TripDetailsPage: React.FC = () => {
                   min={today}
                   onChange={(e) => setStartDate(e.target.value)}
                   required
+                  className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 />
                 <Input
                   type="date"
@@ -180,13 +183,14 @@ const TripDetailsPage: React.FC = () => {
                   min={startDate || today}
                   onChange={(e) => setEndDate(e.target.value)}
                   required
+                  className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 />
               </div>
               {/* Days / Nights summary */}
               {dateInfo() && (
-                <div className="mt-2 text-sm text-gray-600 flex items-center gap-3">
+                <div className="mt-2 text-sm text-gray-600 dark:text-gray-400 flex items-center gap-3">
                   <span className="font-medium">{dateInfo()!.days} {dateInfo()!.days === 1 ? 'day' : 'days'}</span>
-                  <span className="text-gray-400">·</span>
+                  <span className="text-gray-400 dark:text-gray-500">·</span>
                   <span className="font-medium">{dateInfo()!.nights} {dateInfo()!.nights === 1 ? 'night' : 'nights'}</span>
                 </div>
               )}
@@ -194,7 +198,7 @@ const TripDetailsPage: React.FC = () => {
 
             {/* Total Budget (numeric input) */}
             <div className="space-y-2">
-              <Label className="flex items-center gap-2 text-gray-700">
+              <Label className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
                 Total Budget
               </Label>
               <Input
@@ -204,13 +208,14 @@ const TripDetailsPage: React.FC = () => {
                 placeholder="Enter total budget"
                 min={0}
                 step={1}
+                className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
             </div>
 
             {/* Preferences */}
             <div className="md:col-span-2 space-y-2">
-              <Label className="flex items-center gap-2 text-gray-700">
-                <Wand2 className="w-5 h-5 text-orange-600" /> Travel Preferences
+              <Label className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                <Wand2 className="w-5 h-5 text-indigo-600 dark:text-indigo-400" /> Travel Preferences
               </Label>
               <div className="flex flex-wrap gap-2">
                 {TRAVEL_TAGS.map((tag) => (
@@ -221,8 +226,8 @@ const TripDetailsPage: React.FC = () => {
                     variant={preferences.includes(tag) ? "default" : "outline"}
                     className={`rounded-full ${
                       preferences.includes(tag)
-                        ? "bg-gradient-to-r from-orange-500 to-red-600 text-white"
-                        : "text-gray-700"
+                        ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-transparent"
+                        : "text-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
                     }`}
                     onClick={() => togglePreference(tag)}
                   >
@@ -236,14 +241,15 @@ const TripDetailsPage: React.FC = () => {
                 onChange={(e) => setCustomPref(e.target.value)}
                 placeholder="Add any other preferences..."
                 rows={2}
+                className="dark:bg-gray-700 dark:border-gray-600 dark:text-white"
               />
             </div>
 
             {error && (
-              <p className="text-red-600 text-center md:col-span-2">{error}</p>
+              <p className="text-red-600 dark:text-red-400 text-center md:col-span-2">{error}</p>
             )}
             {success && (
-              <p className="text-green-600 text-center md:col-span-2">
+              <p className="text-green-600 dark:text-green-400 text-center md:col-span-2">
                 ✅ Itinerary generated successfully!
               </p>
             )}
@@ -252,7 +258,7 @@ const TripDetailsPage: React.FC = () => {
               <Button
                 type="submit"
                 disabled={loading}
-                className="bg-gradient-to-r from-orange-500 to-red-600 hover:scale-[1.03] transition-transform text-white px-10 py-2"
+                className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 hover:scale-[1.03] transition-all text-white px-10 py-2 shadow-lg shadow-indigo-500/25"
               >
                 {loading ? (
                   <>
@@ -260,7 +266,7 @@ const TripDetailsPage: React.FC = () => {
                     Generating Itinerary...
                   </>
                 ) : (
-                  "Generate AI Itinerary"
+                  "Generate AI Itinerary ✨"
                 )}
               </Button>
             </div>
