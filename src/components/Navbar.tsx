@@ -22,9 +22,33 @@ const Navbar = () => {
   const isActive = (path: string): boolean => location.pathname === path;
 
   useEffect(() => {
+    const token = localStorage.getItem("token");
     const storedUser = localStorage.getItem("user");
+
+    // Optimistically set UI from local storage to prevent flicker
     if (storedUser) setUser(JSON.parse(storedUser));
-  }, []);
+
+    if (token) {
+      fetch("http://127.0.0.1:5000/me", {
+        headers: { "Authorization": `Bearer ${token}` }
+      })
+        .then(res => {
+          if (!res.ok) throw new Error("Invalid session");
+          return res.json();
+        })
+        .then(data => {
+          setUser(data); // Ensures latest data triggers rerender
+          localStorage.setItem("user", JSON.stringify(data));
+        })
+        .catch((err) => {
+          console.error("User validation error:", err);
+        });
+    } else {
+      // ⚠️ IMPORTANT: If there is no token, ensure user is set to null
+      setUser(null);
+    }
+  }, [location.pathname]);
+
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 10);
@@ -85,38 +109,34 @@ const Navbar = () => {
   };
 
   const navLinkClass = (path: string) =>
-    `px-3 py-2 rounded-xl font-medium transition-all duration-300 text-sm ${
-      isActive(path)
-        ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 shadow-sm'
-        : 'text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-500/10'
+    `px-3 py-2 rounded-xl font-medium transition-all duration-300 text-sm ${isActive(path)
+      ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 shadow-sm'
+      : 'text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-500/10'
     }`;
 
   const ThemeToggleButton = ({ className = '' }: { className?: string }) => (
     <button
       onClick={toggleTheme}
-      className={`relative p-2.5 rounded-xl transition-all duration-500 ${
-        theme === 'dark'
-          ? 'bg-indigo-500/20 text-yellow-400 hover:bg-indigo-500/30'
-          : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-500/20 dark:text-indigo-400'
-      } ${className}`}
+      className={`relative p-2.5 rounded-xl transition-all duration-500 ${theme === 'dark'
+        ? 'bg-indigo-500/20 text-yellow-400 hover:bg-indigo-500/30'
+        : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-500/20 dark:text-indigo-400'
+        } ${className}`}
       aria-label="Toggle theme"
       style={{ cursor: 'pointer' }}
     >
       <div className="relative w-5 h-5 overflow-hidden">
         {/* Sun → shown in dark mode */}
         <svg
-          className={`absolute inset-0 w-5 h-5 transition-all duration-500 ${
-            theme === 'dark' ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'
-          }`}
+          className={`absolute inset-0 w-5 h-5 transition-all duration-500 ${theme === 'dark' ? 'rotate-0 scale-100 opacity-100' : 'rotate-90 scale-0 opacity-0'
+            }`}
           fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
         </svg>
         {/* Moon → shown in light mode */}
         <svg
-          className={`absolute inset-0 w-5 h-5 transition-all duration-500 ${
-            theme === 'light' ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'
-          }`}
+          className={`absolute inset-0 w-5 h-5 transition-all duration-500 ${theme === 'light' ? 'rotate-0 scale-100 opacity-100' : '-rotate-90 scale-0 opacity-0'
+            }`}
           fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
@@ -128,11 +148,10 @@ const Navbar = () => {
   return (
     <>
       {/* Top Bar */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled
-          ? 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl shadow-lg shadow-indigo-500/5 dark:shadow-indigo-500/10 border-b border-gray-200/50 dark:border-gray-700/50'
-          : 'bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border-b border-transparent'
-      }`}>
+      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${scrolled
+        ? 'bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl shadow-lg shadow-indigo-500/5 dark:shadow-indigo-500/10 border-b border-gray-200/50 dark:border-gray-700/50'
+        : 'bg-white/60 dark:bg-gray-900/60 backdrop-blur-xl border-b border-transparent'
+        }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-18">
             {/* Logo */}
@@ -162,21 +181,19 @@ const Navbar = () => {
                 <>
                   <Link
                     to="/login"
-                    className={`px-4 py-2 rounded-xl font-semibold border transition-all duration-300 text-sm ${
-                      isActive('/login')
-                        ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-600 shadow-sm'
-                        : 'text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-700 hover:bg-indigo-500/10 hover:shadow-sm'
-                    }`}
+                    className={`px-4 py-2 rounded-xl font-semibold border transition-all duration-300 text-sm ${isActive('/login')
+                      ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-600 shadow-sm'
+                      : 'text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-700 hover:bg-indigo-500/10 hover:shadow-sm'
+                      }`}
                   >
                     Login
                   </Link>
                   <Link
                     to="/signup"
-                    className={`px-5 py-2 rounded-xl font-semibold transition-all duration-300 shadow-md text-sm ${
-                      isActive('/signup')
-                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/30'
-                        : 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600 hover:shadow-lg hover:shadow-indigo-500/30 hover:scale-105'
-                    }`}
+                    className={`px-5 py-2 rounded-xl font-semibold transition-all duration-300 shadow-md text-sm ${isActive('/signup')
+                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/30'
+                      : 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600 hover:shadow-lg hover:shadow-indigo-500/30 hover:scale-105'
+                      }`}
                   >
                     Sign Up
                   </Link>
@@ -250,21 +267,19 @@ const Navbar = () => {
                 <>
                   <Link
                     to="/login"
-                    className={`px-3 py-1.5 rounded-xl font-semibold border transition-all duration-300 text-xs whitespace-nowrap ${
-                      isActive('/login')
-                        ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-600 shadow-sm'
-                        : 'text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-700 hover:bg-indigo-500/10'
-                    }`}
+                    className={`px-3 py-1.5 rounded-xl font-semibold border transition-all duration-300 text-xs whitespace-nowrap ${isActive('/login')
+                      ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border-indigo-300 dark:border-indigo-600 shadow-sm'
+                      : 'text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-700 hover:bg-indigo-500/10'
+                      }`}
                   >
                     Login
                   </Link>
                   <Link
                     to="/signup"
-                    className={`px-3 py-1.5 rounded-xl font-semibold transition-all duration-300 shadow-sm text-xs whitespace-nowrap ${
-                      isActive('/signup')
-                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
-                        : 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600'
-                    }`}
+                    className={`px-3 py-1.5 rounded-xl font-semibold transition-all duration-300 shadow-sm text-xs whitespace-nowrap ${isActive('/signup')
+                      ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg'
+                      : 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:from-indigo-600 hover:to-purple-600'
+                      }`}
                   >
                     Sign Up
                   </Link>
@@ -331,9 +346,8 @@ const Navbar = () => {
 
       {/* Mobile Side Drawer */}
       <div
-        className={`fixed top-0 left-0 h-full w-72 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-gray-200/50 dark:border-gray-700/50 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
-          isDrawerOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed top-0 left-0 h-full w-72 bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl border-r border-gray-200/50 dark:border-gray-700/50 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${isDrawerOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         <div className="flex flex-col h-full">
           {/* Drawer Header */}
@@ -367,11 +381,10 @@ const Navbar = () => {
               <Link
                 key={to}
                 to={to}
-                className={`px-4 py-3 rounded-xl font-medium transition-all duration-300 ${
-                  isActive(to)
-                    ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                    : 'text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-500/10'
-                }`}
+                className={`px-4 py-3 rounded-xl font-medium transition-all duration-300 ${isActive(to)
+                  ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                  : 'text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-500/10'
+                  }`}
                 onClick={() => setIsDrawerOpen(false)}
               >
                 {label}

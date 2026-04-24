@@ -7,13 +7,33 @@ const Profile = () => {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem('user');
-    if (stored) {
-      setUser(JSON.parse(stored));
-    } else {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
       navigate('/login');
+      return;
     }
+
+    // Verify dynamically with backend
+    fetch("http://127.0.0.1:5000/me", {
+      headers: { "Authorization": `Bearer ${token}` }
+    })
+      .then(res => {
+        if (!res.ok) throw new Error("User not found or token invalid");
+        return res.json();
+      })
+      .then(data => {
+        setUser(data);
+        localStorage.setItem('user', JSON.stringify(data)); // Sync fresh data
+      })
+      .catch(err => {
+        // If user was deleted or token is invalid
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+        navigate('/login');
+      });
   }, [navigate]);
+
 
   const handleLogout = () => {
     localStorage.removeItem('user');
