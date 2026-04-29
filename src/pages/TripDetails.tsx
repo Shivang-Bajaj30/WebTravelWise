@@ -98,14 +98,22 @@ const TripDetailsPage: React.FC = () => {
         startDate,
         endDate,
         preferences: allPrefs.join(", "),
-        budget: budget === "" ? undefined : Number(budget),
+        budget: String(budget),
       });
 
       console.log("AI Itinerary:", result);
       setSuccess(true);
 
       setTimeout(() => {
-        navigate("/itinerary", { state: { data: result } });
+        navigate("/itinerary", {
+          state: {
+            data: result,
+            destination: selectedLocation,
+            startDate,
+            endDate,
+            travelers,
+          },
+        });
       }, 1200);
     } catch (err) {
       console.error(err);
@@ -224,11 +232,10 @@ const TripDetailsPage: React.FC = () => {
                     type="button"
                     size="sm"
                     variant={preferences.includes(tag) ? "default" : "outline"}
-                    className={`rounded-full ${
-                      preferences.includes(tag)
-                        ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-transparent"
-                        : "text-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
-                    }`}
+                    className={`rounded-full ${preferences.includes(tag)
+                      ? "bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-transparent"
+                      : "text-gray-700 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700"
+                      }`}
                     onClick={() => togglePreference(tag)}
                   >
                     <Sparkles className="w-4 h-4 mr-1" /> {tag}

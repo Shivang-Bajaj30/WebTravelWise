@@ -148,3 +148,165 @@
 ::-webkit-scrollbar-thumb:hover {
   background: oklch(0.55 0.22 265);
 }
+
+/* ── Print / Save as PDF ──
+   Uses the browser's native print engine (supports oklch natively).
+   Hide UI chrome and format the itinerary for paper.                */
+
+.no-print {
+  /* marker class – only relevant inside @media print */
+}
+
+@media print {
+  /* ─── Hide UI chrome ─── */
+  nav,
+  header,
+  footer,
+  .no-print,
+  button,
+  a[href*="google.com/maps"] {
+    display: none !important;
+  }
+
+  /* ─── Force light mode on everything ─── */
+  html,
+  body,
+  div,
+  section,
+  main,
+  article {
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #111827 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Kill ALL gradient backgrounds across the page */
+  [class*="bg-gradient"],
+  [class*="from-"],
+  [class*="via-"],
+  [class*="to-"],
+  [class*="dark:from-"],
+  [class*="dark:via-"],
+  [class*="dark:to-"] {
+    background: #ffffff !important;
+    background-image: none !important;
+  }
+
+  /* Force all dark-mode backgrounds to white */
+  [class*="bg-gray-800"],
+  [class*="bg-gray-700"],
+  [class*="bg-gray-900"],
+  [class*="dark:bg-"] {
+    background-color: #ffffff !important;
+  }
+
+  /* Keep white-bg elements truly white */
+  [class*="bg-white"] {
+    background-color: #ffffff !important;
+  }
+
+  /* ─── Typography: force all text dark ─── */
+  * {
+    color: #111827 !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Accent text colors (override the * rule above selectively) */
+  [class*="text-indigo-600"],
+  [class*="text-indigo-500"],
+  [class*="text-indigo-400"] {
+    color: #4f46e5 !important;
+  }
+
+  [class*="text-teal"] {
+    color: #0d9488 !important;
+  }
+
+  [class*="text-amber"] {
+    color: #d97706 !important;
+  }
+
+  [class*="text-gray-500"],
+  [class*="text-gray-400"] {
+    color: #6b7280 !important;
+  }
+
+  /* White text on image overlays must stay white */
+  .absolute h3,
+  h3.absolute,
+  [class*="bg-gradient-to-t"] + h3,
+  .relative h3 {
+    color: #ffffff !important;
+  }
+
+  /* Rating badge colors */
+  [class*="bg-yellow"] {
+    background-color: #fbbf24 !important;
+    color: #78350f !important;
+  }
+
+  /* Tag/badge backgrounds – keep them light & visible */
+  [class*="bg-indigo-50"],
+  [class*="bg-indigo-500/10"] {
+    background-color: #eef2ff !important;
+  }
+
+  [class*="bg-teal-50"],
+  [class*="bg-teal-500/10"] {
+    background-color: #f0fdfa !important;
+  }
+
+  [class*="bg-amber-50"],
+  [class*="bg-amber-500/10"] {
+    background-color: #fffbeb !important;
+  }
+
+  [class*="bg-gray-50"] {
+    background-color: #f9fafb !important;
+  }
+
+  [class*="bg-gray-100"] {
+    background-color: #f3f4f6 !important;
+  }
+
+  /* ─── Layout ─── */
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 15mm 12mm;
+  }
+
+  /* Remove min-height so pages flow naturally */
+  [class*="min-h-screen"] {
+    min-height: auto !important;
+  }
+
+  /* Prevent cards from breaking across pages */
+  .space-y-10 > * {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Images */
+  img {
+    max-width: 100% !important;
+    page-break-inside: avoid;
+  }
+
+  /* Borders */
+  [class*="border-gray"] {
+    border-color: #e5e7eb !important;
+  }
+
+  /* Image overlay gradients SHOULD print for readability */
+  .relative > [class*="bg-gradient-to-t"][class*="from-black"] {
+    background-image: linear-gradient(to top, rgba(0,0,0,0.5), transparent) !important;
+  }
+}

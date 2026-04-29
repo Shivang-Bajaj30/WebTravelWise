@@ -4,8 +4,9 @@ import { motion } from 'framer-motion';
 import { login } from '../lib/api';
 
 const Login = () => {
+  const [loginType, setLoginType] = useState<'email' | 'username'>('email');
   const [formData, setFormData] = useState({
-    email: '',
+    identifier: '', // Can be email or username
     password: ''
   });
 
@@ -18,21 +19,28 @@ const Login = () => {
     if (message.text) setMessage({ type: '', text: '' });
   };
 
+  const handleLoginTypeChange = (type: 'email' | 'username') => {
+    setLoginType(type);
+    setFormData({ identifier: '', password: '' });
+    setMessage({ type: '', text: '' });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage({ type: '', text: '' });
     setLoading(true);
 
     try {
-      const { email, password } = formData;
+      const { identifier, password } = formData;
 
-      if (!email || !password) {
+      if (!identifier || !password) {
         setMessage({ type: 'error', text: 'Please fill in all fields.' });
         setLoading(false);
         return;
       }
 
-      const res = await login(email, password);
+      // Send correct field based on login type
+      const res = await login(identifier, password);
 
       if (res.error) {
         setMessage({ type: 'error', text: res.error });
@@ -104,18 +112,42 @@ const Login = () => {
             <p className="text-gray-500 dark:text-gray-400">Login to continue exploring!</p>
           </div>
 
+          {/* Login Type Toggle */}
+          <div className="mb-6 flex gap-3 bg-gray-100 dark:bg-gray-800 p-1 rounded-lg">
+            <button
+              type="button"
+              onClick={() => handleLoginTypeChange('email')}
+              className={`flex-1 py-2.5 px-4 rounded-md font-semibold text-sm transition-all duration-200 ${loginType === 'email'
+                ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                }`}
+            >
+              📧 Email
+            </button>
+            <button
+              type="button"
+              onClick={() => handleLoginTypeChange('username')}
+              className={`flex-1 py-2.5 px-4 rounded-md font-semibold text-sm transition-all duration-200 ${loginType === 'username'
+                ? 'bg-white dark:bg-gray-700 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                }`}
+            >
+              👤 Username
+            </button>
+          </div>
+
           <form className="flex flex-col gap-5" onSubmit={handleSubmit}>
             <div>
-              <label className="block mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300" htmlFor="email">
-                Email Address
+              <label className="block mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300" htmlFor="identifier">
+                {loginType === 'email' ? 'Email Address' : 'Username'}
               </label>
               <input
-                value={formData.email}
+                value={formData.identifier}
                 onChange={handleChange}
-                placeholder="you@example.com"
-                name="email"
-                id="email"
-                type="email"
+                placeholder={loginType === 'email' ? 'you@example.com' : 'johndoe'}
+                name="identifier"
+                id="identifier"
+                type={loginType === 'email' ? 'email' : 'text'}
                 disabled={loading}
                 className="w-full px-4 py-3 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none text-sm transition-all duration-200 placeholder-gray-400 dark:placeholder-gray-500"
               />
@@ -138,13 +170,12 @@ const Login = () => {
             </div>
 
             {message.text && (
-              <div className={`rounded-xl p-3 text-sm font-medium ${
-                message.type === 'error'
-                  ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/20'
-                  : message.type === 'success'
-                    ? 'bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-500/20'
-                    : 'bg-yellow-50 dark:bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-500/20'
-              }`}>
+              <div className={`rounded-xl p-3 text-sm font-medium ${message.type === 'error'
+                ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/20'
+                : message.type === 'success'
+                  ? 'bg-green-50 dark:bg-green-500/10 text-green-600 dark:text-green-400 border border-green-200 dark:border-green-500/20'
+                  : 'bg-yellow-50 dark:bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-500/20'
+                }`}>
                 {message.text}
               </div>
             )}

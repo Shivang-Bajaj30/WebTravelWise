@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Card,
@@ -16,6 +16,8 @@ import {
   DollarSign,
   Clock,
   Navigation2,
+  Download,
+  Users,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -128,6 +130,15 @@ const getDirectionsUrl = (
 const ItineraryPage: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // Extract trip metadata passed from TripDetails page
+  const tripMeta = {
+    destination: (location.state as any)?.destination || "",
+    startDate: (location.state as any)?.startDate || "",
+    endDate: (location.state as any)?.endDate || "",
+    travelers: (location.state as any)?.travelers || 0,
+  };
 
   // Try multiple nesting patterns the app may send
   let incoming: any =
@@ -278,215 +289,246 @@ const ItineraryPage: React.FC = () => {
 
   const formattedBudget = formatBudget(data?.budget);
 
+  const handleSavePdf = useCallback(() => {
+    window.print();
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50/50 via-background to-purple-50/50 dark:from-indigo-950/20 dark:via-background dark:to-purple-950/20 py-12 px-4 sm:px-6">
       <div className="max-w-6xl mx-auto space-y-10">
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="text-center">
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-white mb-3">✈️ Your Personalized Itinerary</h1>
-          <p className="text-lg text-gray-600 dark:text-gray-400 mb-6">Explore your dream trip with curated recommendations tailored just for you.</p>
-          <Button onClick={() => navigate("/")} className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/25 px-6 py-2 rounded-full">
-            <ArrowLeft className="w-4 h-4 mr-2" /> Back to Home
-          </Button>
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-white mb-2">
+            {tripMeta.destination ? `✈️ ${tripMeta.destination}` : "✈️ Your Personalized Itinerary"}
+          </h1>
+          {tripMeta.destination && (
+            <p className="text-xl text-indigo-600 dark:text-indigo-400 font-semibold mb-1">Travel Itinerary</p>
+          )}
+          {/* Trip meta badges */}
+          {(tripMeta.startDate || tripMeta.travelers > 0 || data?.duration) && (
+            <div className="flex justify-center flex-wrap gap-3 mb-4 mt-3">
+              {data?.duration && (
+                <span className="inline-flex items-center gap-1.5 text-sm font-medium bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 px-3 py-1.5 rounded-full">
+                  <Clock className="w-4 h-4" /> {data.duration}
+                </span>
+              )}
+              {tripMeta.startDate && tripMeta.endDate && (
+                <span className="inline-flex items-center gap-1.5 text-sm font-medium bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 px-3 py-1.5 rounded-full">
+                  <Calendar className="w-4 h-4" /> {new Date(tripMeta.startDate).toLocaleDateString("en-IN", { day: "numeric", month: "short" })} – {new Date(tripMeta.endDate).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                </span>
+              )}
+              {tripMeta.travelers > 0 && (
+                <span className="inline-flex items-center gap-1.5 text-sm font-medium bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 px-3 py-1.5 rounded-full">
+                  <Users className="w-4 h-4" /> {tripMeta.travelers} {tripMeta.travelers === 1 ? "Traveler" : "Travelers"}
+                </span>
+              )}
+              {formattedBudget && (
+                <span className="inline-flex items-center gap-1.5 text-sm font-medium bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 px-3 py-1.5 rounded-full">
+                  <DollarSign className="w-4 h-4" /> {formattedBudget}
+                </span>
+              )}
+            </div>
+          )}
+          <p className="text-base text-gray-500 dark:text-gray-400 mb-6">Curated recommendations tailored just for you.</p>
+          <div className="flex justify-center gap-3 flex-wrap no-print">
+            <Button onClick={() => navigate("/")} className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/25 px-6 py-2 rounded-full">
+              <ArrowLeft className="w-4 h-4 mr-2" /> Back to Home
+            </Button>
+            <Button
+              onClick={handleSavePdf}
+              className="no-print bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/25 px-6 py-2 rounded-full"
+            >
+              <Download className="w-4 h-4 mr-2" /> Save as PDF
+            </Button>
+          </div>
         </motion.div>
 
-        {/* Overview Info */}
-        {(formattedBudget || data?.duration) && (
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-gray-800/60 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 flex flex-col sm:flex-row justify-center gap-8 text-gray-800 dark:text-gray-200 text-lg">
-            {data?.duration && (
+        {/* PDF-captured content starts here */}
+        <div ref={contentRef} className="space-y-10">
+
+          {/* User Location Info */}
+          {userCoords && (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-gray-800/60 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 flex justify-center text-sm text-gray-500 dark:text-gray-400">
               <p className="flex items-center gap-2">
-                <Clock className="w-5 h-5 text-indigo-500" />
-                <span className="font-medium">Duration:</span> {data.duration}
+                📍 Your Location: {userCoords.lat.toFixed(4)}, {userCoords.lng.toFixed(4)}
               </p>
-            )}
-            {formattedBudget && (
-              <p className="flex items-center gap-2">
-                <DollarSign className="w-5 h-5 text-teal-500" />
-                <span className="font-medium">Total Budget:</span> {formattedBudget}
-              </p>
-            )}
-            {userCoords ? (
-              <p className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                📍 You: {userCoords.lat.toFixed(4)}, {userCoords.lng.toFixed(4)}
-              </p>
-            ) : (
-              <p className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">Location not available (grant geolocation for distances)</p>
-            )}
-          </motion.div>
-        )}
+            </motion.div>
+          )}
 
-        {/* Places & Hotels Sections */}
-        {[
-          {
-            icon: <MapPin className="w-6 h-6" />,
-            title: "Must-Visit Places",
-            data: augPlaces,
-            empty: "No place recommendations available.",
-            render: (p: any, i: number) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.05 }} className="group bg-white dark:bg-gray-800/60 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-xl transition-all duration-500 overflow-hidden">
-                {/* Image Section */}
-                <div className="relative h-48 bg-gradient-to-br from-indigo-200 via-purple-100 to-blue-200 dark:from-indigo-900 dark:via-purple-900 dark:to-blue-900 overflow-hidden">
-                  <img src="/images/places.jpg" alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e: any) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }} />
-                  <div className="hidden w-full h-full items-center justify-center absolute inset-0 bg-gradient-to-br from-indigo-200 via-purple-100 to-blue-200 dark:from-indigo-900 dark:via-purple-900 dark:to-blue-900">
-                    <MapPin className="w-12 h-12 text-white/60" />
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                  <h3 className="absolute bottom-3 left-4 right-4 font-bold text-lg text-white drop-shadow-lg">{p.name}</h3>
-                </div>
-
-                {/* Content Section */}
-                <div className="p-4 space-y-3">
-                  {p.details && <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{p.details}</p>}
-
-                  <div className="flex flex-wrap gap-2">
-                    <span className="inline-flex items-center gap-1 text-xs font-medium bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 px-2.5 py-1 rounded-full">🕒 {p.time || "Flexible"}</span>
-                    <span className="inline-flex items-center gap-1 text-xs font-medium bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 px-2.5 py-1 rounded-full">💰 {p.pricing || "Free"}</span>
-                    <span className="inline-flex items-center gap-1 text-xs font-medium bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 px-2.5 py-1 rounded-full">🌤️ {p.bestTime || "All year"}</span>
-                  </div>
-
-                  {p.distanceKm !== null && p.distanceKm !== undefined && (
-                    <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-2.5">
-                      <div className="text-sm text-gray-800 dark:text-gray-200 font-semibold">{p.distanceKm} km away</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">🚗 {p.etaDrive} • 🚶 {p.etaWalk}</div>
+          {/* Places & Hotels Sections */}
+          {[
+            {
+              icon: <MapPin className="w-6 h-6" />,
+              title: "Must-Visit Places",
+              data: augPlaces,
+              empty: "No place recommendations available.",
+              render: (p: any, i: number) => (
+                <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.05 }} className="group bg-white dark:bg-gray-800/60 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-xl transition-all duration-500 overflow-hidden">
+                  {/* Image Section */}
+                  <div className="relative h-48 bg-gradient-to-br from-indigo-200 via-purple-100 to-blue-200 dark:from-indigo-900 dark:via-purple-900 dark:to-blue-900 overflow-hidden">
+                    <img src="/images/places.jpg" alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e: any) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }} />
+                    <div className="hidden w-full h-full items-center justify-center absolute inset-0 bg-gradient-to-br from-indigo-200 via-purple-100 to-blue-200 dark:from-indigo-900 dark:via-purple-900 dark:to-blue-900">
+                      <MapPin className="w-12 h-12 text-white/60" />
                     </div>
-                  )}
-
-                  <a
-                    href={getDirectionsUrl(userCoords, { name: p.name, coordinates: p.coordinates, address: p.details })}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-sm font-medium rounded-xl shadow-sm transition-all duration-200"
-                  >
-                    <Navigation2 className="w-3.5 h-3.5" />
-                    Get Directions
-                  </a>
-                </div>
-              </motion.div>
-            ),
-          },
-          {
-            icon: <Hotel className="w-6 h-6" />,
-            title: "Recommended Hotels",
-            data: augHotels,
-            empty: "No hotel data available.",
-            render: (h: any, i: number) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.05 }} className="group bg-white dark:bg-gray-800/60 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-xl transition-all duration-500 overflow-hidden">
-                {/* Image Section */}
-                <div className="relative h-48 bg-gradient-to-br from-purple-200 via-indigo-100 to-blue-200 dark:from-purple-900 dark:via-indigo-900 dark:to-blue-900 overflow-hidden">
-                  <img src="/images/hotel.png" alt={h.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e: any) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }} />
-                  <div className="hidden w-full h-full items-center justify-center absolute inset-0 bg-gradient-to-br from-purple-200 via-indigo-100 to-blue-200 dark:from-purple-900 dark:via-indigo-900 dark:to-blue-900">
-                    <Hotel className="w-12 h-12 text-white/60" />
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                  <h3 className="absolute bottom-3 left-4 right-4 font-bold text-lg text-white drop-shadow-lg">{h.name}</h3>
-                  {h.rating && (
-                    <span className="absolute top-3 right-3 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full shadow">⭐ {h.rating}</span>
-                  )}
-                </div>
-
-                {/* Content Section */}
-                <div className="p-4 space-y-3">
-                  {h.description && <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{h.description}</p>}
-
-                  <div className="flex items-center gap-3">
-                    {h.price && <span className="text-sm font-semibold text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-500/10 px-2.5 py-1 rounded-full">💵 {h.price}</span>}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                    <h3 className="absolute bottom-3 left-4 right-4 font-bold text-lg text-white drop-shadow-lg">{p.name}</h3>
                   </div>
 
-                  {h.address && <p className="text-sm text-gray-500 dark:text-gray-400 flex items-start gap-1"><MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0 text-gray-400 dark:text-gray-500" /> {h.address}</p>}
+                  {/* Content Section */}
+                  <div className="p-4 space-y-3">
+                    {p.details && <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{p.details}</p>}
 
-                  {h.amenities && h.amenities.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5">
-                      {h.amenities.map((a: string, j: number) => (
-                        <span key={j} className="text-xs bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full">{a}</span>
-                      ))}
+                    <div className="flex flex-wrap gap-2">
+                      <span className="inline-flex items-center gap-1 text-xs font-medium bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 px-2.5 py-1 rounded-full">🕒 {p.time || "Flexible"}</span>
+                      <span className="inline-flex items-center gap-1 text-xs font-medium bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 px-2.5 py-1 rounded-full">💰 {p.pricing || "Free"}</span>
+                      <span className="inline-flex items-center gap-1 text-xs font-medium bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 px-2.5 py-1 rounded-full">🌤️ {p.bestTime || "All year"}</span>
                     </div>
-                  )}
 
-                  {h.distanceKm !== null && h.distanceKm !== undefined && (
-                    <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-2.5">
-                      <div className="text-sm text-gray-800 dark:text-gray-200 font-semibold">{h.distanceKm} km away</div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">🚗 {h.etaDrive} • 🚶 {h.etaWalk}</div>
+                    {p.distanceKm !== null && p.distanceKm !== undefined && (
+                      <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-2.5">
+                        <div className="text-sm text-gray-800 dark:text-gray-200 font-semibold">{p.distanceKm} km away</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">🚗 {p.etaDrive} • 🚶 {p.etaWalk}</div>
+                      </div>
+                    )}
+
+                    <a
+                      href={getDirectionsUrl(userCoords, { name: p.name, coordinates: p.coordinates, address: p.details })}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-sm font-medium rounded-xl shadow-sm transition-all duration-200"
+                    >
+                      <Navigation2 className="w-3.5 h-3.5" />
+                      Get Directions
+                    </a>
+                  </div>
+                </motion.div>
+              ),
+            },
+            {
+              icon: <Hotel className="w-6 h-6" />,
+              title: "Recommended Hotels",
+              data: augHotels,
+              empty: "No hotel data available.",
+              render: (h: any, i: number) => (
+                <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.05 }} className="group bg-white dark:bg-gray-800/60 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 hover:shadow-xl transition-all duration-500 overflow-hidden">
+                  {/* Image Section */}
+                  <div className="relative h-48 bg-gradient-to-br from-purple-200 via-indigo-100 to-blue-200 dark:from-purple-900 dark:via-indigo-900 dark:to-blue-900 overflow-hidden">
+                    <img src="/images/hotel.png" alt={h.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" onError={(e: any) => { e.target.onerror = null; e.target.style.display = 'none'; e.target.nextElementSibling.style.display = 'flex'; }} />
+                    <div className="hidden w-full h-full items-center justify-center absolute inset-0 bg-gradient-to-br from-purple-200 via-indigo-100 to-blue-200 dark:from-purple-900 dark:via-indigo-900 dark:to-blue-900">
+                      <Hotel className="w-12 h-12 text-white/60" />
                     </div>
-                  )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+                    <h3 className="absolute bottom-3 left-4 right-4 font-bold text-lg text-white drop-shadow-lg">{h.name}</h3>
+                    {h.rating && (
+                      <span className="absolute top-3 right-3 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-full shadow">⭐ {h.rating}</span>
+                    )}
+                  </div>
 
-                  <a
-                    href={getDirectionsUrl(userCoords, { name: h.name, coordinates: h.coordinates, address: h.address })}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-sm font-medium rounded-xl shadow-sm transition-all duration-200"
-                  >
-                    <Navigation2 className="w-3.5 h-3.5" />
-                    Get Directions
-                  </a>
-                </div>
-              </motion.div>
-            ),
-          },
-        ].map((section, index) => (
-          <Card key={index} className="shadow-sm border border-gray-100 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/30 backdrop-blur-sm">
+                  {/* Content Section */}
+                  <div className="p-4 space-y-3">
+                    {h.description && <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{h.description}</p>}
+
+                    <div className="flex items-center gap-3">
+                      {h.price && <span className="text-sm font-semibold text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-500/10 px-2.5 py-1 rounded-full">💵 {h.price}</span>}
+                    </div>
+
+                    {h.address && <p className="text-sm text-gray-500 dark:text-gray-400 flex items-start gap-1"><MapPin className="w-3.5 h-3.5 mt-0.5 shrink-0 text-gray-400 dark:text-gray-500" /> {h.address}</p>}
+
+                    {h.amenities && h.amenities.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5">
+                        {h.amenities.map((a: string, j: number) => (
+                          <span key={j} className="text-xs bg-gray-100 dark:bg-gray-700/50 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded-full">{a}</span>
+                        ))}
+                      </div>
+                    )}
+
+                    {h.distanceKm !== null && h.distanceKm !== undefined && (
+                      <div className="bg-gray-50 dark:bg-gray-700/30 rounded-lg p-2.5">
+                        <div className="text-sm text-gray-800 dark:text-gray-200 font-semibold">{h.distanceKm} km away</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">🚗 {h.etaDrive} • 🚶 {h.etaWalk}</div>
+                      </div>
+                    )}
+
+                    <a
+                      href={getDirectionsUrl(userCoords, { name: h.name, coordinates: h.coordinates, address: h.address })}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-sm font-medium rounded-xl shadow-sm transition-all duration-200"
+                    >
+                      <Navigation2 className="w-3.5 h-3.5" />
+                      Get Directions
+                    </a>
+                  </div>
+                </motion.div>
+              ),
+            },
+          ].map((section, index) => (
+            <Card key={index} className="shadow-sm border border-gray-100 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/30 backdrop-blur-sm">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 text-2xl">
+                  {section.icon} {section.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {section.data && section.data.length > 0 ? section.data.map(section.render) : <p className="text-gray-600 dark:text-gray-400">{section.empty}</p>}
+              </CardContent>
+            </Card>
+          ))}
+
+          {/* Transportation */}
+          <Card className="shadow-sm border border-gray-100 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/30 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 text-2xl">
-                {section.icon} {section.title}
+                <Bus className="w-6 h-6" /> Transportation
               </CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {section.data && section.data.length > 0 ? section.data.map(section.render) : <p className="text-gray-600 dark:text-gray-400">{section.empty}</p>}
+            <CardContent>
+              {data?.transportation?.length ? (
+                <ul className="list-disc ml-6 text-gray-700 dark:text-gray-300 space-y-1">{data.transportation!.map((t, i) => <li key={i}>{t}</li>)}</ul>
+              ) : (
+                <p className="text-gray-600 dark:text-gray-400">No transportation data available.</p>
+              )}
             </CardContent>
           </Card>
-        ))}
 
-        {/* Transportation */}
-        <Card className="shadow-sm border border-gray-100 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/30 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 text-2xl">
-              <Bus className="w-6 h-6" /> Transportation
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {data?.transportation?.length ? (
-              <ul className="list-disc ml-6 text-gray-700 dark:text-gray-300 space-y-1">{data.transportation!.map((t, i) => <li key={i}>{t}</li>)}</ul>
-            ) : (
-              <p className="text-gray-600 dark:text-gray-400">No transportation data available.</p>
-            )}
-          </CardContent>
-        </Card>
+          {/* Cost Breakdown */}
+          <Card className="shadow-sm border border-gray-100 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/30 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 text-2xl">
+                <DollarSign className="w-6 h-6" /> Cost Breakdown
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {data?.costs?.length ? (
+                <ul className="list-disc ml-6 text-gray-700 dark:text-gray-300 space-y-1">{data.costs!.map((c, i) => <li key={i}>{c}</li>)}</ul>
+              ) : (
+                <p className="text-gray-600 dark:text-gray-400">No cost information available.</p>
+              )}
+            </CardContent>
+          </Card>
 
-        {/* Cost Breakdown */}
-        <Card className="shadow-sm border border-gray-100 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/30 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 text-2xl">
-              <DollarSign className="w-6 h-6" /> Cost Breakdown
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {data?.costs?.length ? (
-              <ul className="list-disc ml-6 text-gray-700 dark:text-gray-300 space-y-1">{data.costs!.map((c, i) => <li key={i}>{c}</li>)}</ul>
-            ) : (
-              <p className="text-gray-600 dark:text-gray-400">No cost information available.</p>
-            )}
-          </CardContent>
-        </Card>
+          {/* Daily Itinerary */}
+          <Card className="shadow-sm border border-gray-100 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/30 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 text-2xl">
+                <Calendar className="w-6 h-6" /> Daily Itinerary
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {data?.itinerary?.length ? (
+                data.itinerary!.map((day, i) => (
+                  <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: i * 0.1 }} className="bg-white dark:bg-gray-800/60 p-5 rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm hover:shadow-md transition">
+                    <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">Day {day.day}</h3>
+                    <ul className="list-disc ml-6 text-gray-700 dark:text-gray-300 space-y-1">{day.activities?.map((a, j) => <li key={j}>{a}</li>)}</ul>
+                  </motion.div>
+                ))
+              ) : (
+                <p className="text-gray-600 dark:text-gray-400">No daily itinerary available.</p>
+              )}
+            </CardContent>
+          </Card>
 
-        {/* Daily Itinerary */}
-        <Card className="shadow-sm border border-gray-100 dark:border-gray-700/50 bg-white/50 dark:bg-gray-800/30 backdrop-blur-sm">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 text-2xl">
-              <Calendar className="w-6 h-6" /> Daily Itinerary
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {data?.itinerary?.length ? (
-              data.itinerary!.map((day, i) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: i * 0.1 }} className="bg-white dark:bg-gray-800/60 p-5 rounded-xl border border-gray-100 dark:border-gray-700/50 shadow-sm hover:shadow-md transition">
-                  <h3 className="font-semibold text-lg text-gray-900 dark:text-white mb-2">Day {day.day}</h3>
-                  <ul className="list-disc ml-6 text-gray-700 dark:text-gray-300 space-y-1">{day.activities?.map((a, j) => <li key={j}>{a}</li>)}</ul>
-                </motion.div>
-              ))
-            ) : (
-              <p className="text-gray-600 dark:text-gray-400">No daily itinerary available.</p>
-            )}
-          </CardContent>
-        </Card>
+        </div>{/* end contentRef */}
       </div>
     </div>
   );

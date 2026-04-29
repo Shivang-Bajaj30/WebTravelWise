@@ -1,10 +1,10 @@
 const BASE_URL = "http://127.0.0.1:5000";
 
-export const login = async (email: string, password: string) => {
+export const login = async (identifier: string, password: string) => {
   const response = await fetch(`${BASE_URL}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ identifier, password }),
   });
   const data = await response.json();
 
@@ -56,30 +56,29 @@ export const signup = async (data: { name: string; email: string; password: stri
 //   return res.json();
 // };
 
+
 export const generateItinerary = async (data: {
   destination: string;
   travelers: number;
   startDate: string;
   endDate: string;
-  preferences: string;
-  budget?: number; // optional numeric budget
+  preferences?: string;
+  budget?: string;
 }) => {
-  const payload: Record<string, unknown> = {
-    destination: data.destination,
-    travelers: data.travelers,
+
+
+  const params = new URLSearchParams({
+    location: data.destination,
+    travelers: String(data.travelers),
     startDate: data.startDate,
     endDate: data.endDate,
-    preferences: data.preferences,
-  };
+    preferences: data.preferences || "",
+    budget: data.budget || "",
+  });
 
-  if (data.budget !== undefined) {
-    payload.budget = Number(data.budget);
-  }
-
-  const res = await fetch(`${BASE_URL}/generate_itinerary`, {
+  const res = await fetch(`${BASE_URL}/api/trips/create?${params.toString()}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
   });
 
   if (!res.ok) {
