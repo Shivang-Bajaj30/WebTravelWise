@@ -76,7 +76,6 @@ const Footer = () => (
           <ul className="space-y-2.5">
             <li className="text-sm text-gray-600 dark:text-gray-400">📧 shivang.bajaj30@gmail.com</li>
             <li className="text-sm text-gray-600 dark:text-gray-400">📞 +91 9810739441</li>
-            <li className="text-sm text-gray-600 dark:text-gray-400">🕐 24/7 Support</li>
           </ul>
         </div>
       </div>
@@ -86,13 +85,13 @@ const Footer = () => (
         <p className="text-sm text-gray-500 dark:text-gray-500">
           © {new Date().getFullYear()} TravelWise. All rights reserved.
         </p>
-        <div className="flex items-center gap-6">
+        {/* <div className="flex items-center gap-6">
           {['Privacy', 'Terms', 'Cookies'].map((item) => (
             <span key={item} className="text-sm text-gray-500 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 cursor-pointer transition-colors">
               {item}
             </span>
           ))}
-        </div>
+        </div> */}
       </div>
     </div>
   </footer>

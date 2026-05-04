@@ -74,8 +74,8 @@ export const generateItinerary = async (data: {
 // ─── My Trips ────────────────────────────────────────────────────────────────
 
 /** Fetch all trips for the currently authenticated user */
-export const getUserTrips = async () => {
-  const res = await fetch(`${BASE_URL}/api/trips/user`, {
+export const getUserTrips = async (userId: string) => {
+  const res = await fetch(`${BASE_URL}/api/trips/${userId}`, {
     method: "GET",
     headers: {
       "Content-Type": "application/json",
@@ -90,17 +90,19 @@ export const getUserTrips = async () => {
   return res.json();
 };
 
-/** Delete a trip by its ID */
-export const deleteTrip = async (tripId: string) => {
-  const res = await fetch(`${BASE_URL}/api/trips/${tripId}`, {
-    method: "DELETE",
+
+/** Fetch all AI generated pre-packaged tours from the backend */
+export const fetchPackages = async () => {
+  const res = await fetch(`${BASE_URL}/api/packages`, {
+    method: "GET",
     headers: {
+      "Content-Type": "application/json",
       ...authHeaders(),
     },
   });
 
   if (!res.ok) {
-    throw new Error(`Failed to delete trip (${res.status})`);
+    throw new Error(`Failed to fetch packages (${res.status})`);
   }
 
   return res.json();

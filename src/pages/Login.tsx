@@ -12,6 +12,23 @@ const Login = () => {
 
   const [message, setMessage] = useState<{ type: string; text: string }>({ type: '', text: '' });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  const EyeIcon = ({ show }: { show: boolean }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      {show ? (
+        <>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </>
+      ) : (
+        <>
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.477 0-8.268-2.943-9.542-7a9.956 9.956 0 012.442-4.362M6.634 6.634A9.956 9.956 0 0112 5c4.477 0 8.268 2.943 9.542 7a9.96 9.96 0 01-4.207 5.042M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3l18 18" />
+        </>
+      )}
+    </svg>
+  );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -153,7 +170,7 @@ const Login = () => {
               />
             </div>
 
-            <div>
+            <div className="relative">
               <label className="block mb-2 text-sm font-semibold text-gray-700 dark:text-gray-300" htmlFor="password">
                 Password
               </label>
@@ -163,10 +180,19 @@ const Login = () => {
                 placeholder="••••••••"
                 name="password"
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 disabled={loading}
-                className="w-full px-4 py-3 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none text-sm transition-all duration-200 placeholder-gray-400 dark:placeholder-gray-500"
+                className="w-full px-4 py-3 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-indigo-500 focus:border-transparent focus:outline-none text-sm transition-all duration-200 placeholder-gray-400 dark:placeholder-gray-500 pr-12"
               />
+              <button
+                type="button"
+                tabIndex={-1}
+                className="absolute right-3 top-[42px] text-gray-400 dark:text-gray-500 hover:text-indigo-600 dark:hover:text-indigo-400 focus:outline-none transition-colors"
+                onClick={() => setShowPassword((prev) => !prev)}
+                style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
+              >
+                <EyeIcon show={showPassword} />
+              </button>
             </div>
 
             {message.text && (

@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { getUserTrips, deleteTrip } from '@/lib/api';
+import { getUserTrips } from '@/lib/api';
 import {
   MapPin,
   Calendar,
   Users,
   Sparkles,
-  Trash2,
   Eye,
   Plus,
   Loader2,
@@ -90,7 +89,16 @@ const MyTrips = () => {
     setLoading(true);
     setError(null);
     try {
-      const data = await getUserTrips();
+      const userStr = localStorage.getItem('user');
+      const user = userStr ? JSON.parse(userStr) : null;
+      const userId = user?.id || user?._id;
+
+      if (!userId) {
+        throw new Error('User ID not found. Please log in again.');
+      }
+
+      const data = await getUserTrips(userId);
+
       // The backend may return an array or { trips: [...] }
       const tripList = Array.isArray(data) ? data : data.trips || data.data || [];
       setTrips(tripList);
@@ -109,19 +117,6 @@ const MyTrips = () => {
     }
     fetchTrips();
   }, []);
-
-  const handleDelete = async (tripId: string) => {
-    if (!confirm('Are you sure you want to delete this trip?')) return;
-    setDeletingId(tripId);
-    try {
-      await deleteTrip(tripId);
-      setTrips((prev) => prev.filter((t) => t.id !== tripId));
-    } catch (err: any) {
-      alert(err.message || 'Failed to delete trip.');
-    } finally {
-      setDeletingId(null);
-    }
-  };
 
   const handleViewTrip = (trip: Trip) => {
     navigate('/itinerary', {
@@ -337,18 +332,6 @@ const MyTrips = () => {
                     >
                       <Eye className="w-3.5 h-3.5" />
                       View Itinerary
-                    </button>
-                    <button
-                      onClick={() => handleDelete(trip.id)}
-                      disabled={deletingId === trip.id}
-                      className="p-2 rounded-xl border border-red-200 dark:border-red-500/30 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all disabled:opacity-50"
-                      title="Delete trip"
-                    >
-                      {deletingId === trip.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="w-4 h-4" />
-                      )}
                     </button>
                   </div>
                 </div>
