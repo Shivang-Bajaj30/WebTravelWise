@@ -29,6 +29,30 @@ const SignUp = () => {
     setMessage({ type: '', text: '' });
     setLoading(true);
 
+    if (formData.username == "" || null) {
+      setMessage({ type: 'error', text: 'Please enter your username.' });
+      setLoading(false);
+      return;
+    }
+
+    if (formData.email == "" || null) {
+      setMessage({ type: 'error', text: 'Please enter your email.' });
+      setLoading(false);
+      return;
+    }
+
+    if (formData.password == "" || null) {
+      setMessage({ type: 'error', text: 'Please enter your password.' });
+      setLoading(false);
+      return;
+    }
+
+    if (formData.confirmPassword == "" || null) {
+      setMessage({ type: 'error', text: 'Please enter your confirm password.' });
+      setLoading(false);
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setMessage({ type: 'error', text: 'Passwords do not match.' });
       setLoading(false);

@@ -1,10 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { update, getUserTrips } from '../lib/api';
+import type { User } from "../lib/api";
 
 const Profile = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState({ name: '', email: '' });
+  const [isSaving, setIsSaving] = useState(false);
+  const [message, setMessage] = useState<{ type: string; text: string } | null>(null);
+  const [tripCount, setTripCount] = useState(0);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -34,6 +41,13 @@ const Profile = () => {
       });
   }, [navigate]);
 
+  useEffect(() => {
+    if (user?.id) {
+      getUserTrips(user.id)
+        .then(trips => setTripCount(trips.length))
+        .catch(err => console.error("Failed to fetch trip count", err));
+    }
+  }, [user?.id]);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -42,13 +56,38 @@ const Profile = () => {
     window.location.reload();
   };
 
+  const handleEditClick = () => {
+    setEditForm({ name: user?.name || '', email: user?.email || '' });
+    setIsEditing(true);
+    setMessage(null);
+  };
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    setMessage(null);
+    try {
+      const res = await update(editForm);
+      if (res.user) {
+        setUser(res.user);
+        localStorage.setItem('user', JSON.stringify(res.user));
+        setMessage({ type: 'success', text: 'Profile updated successfully!' });
+        setIsEditing(false);
+      }
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Failed to update profile.' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setIsEditing(false);
+    setMessage(null);
+  };
+
   if (!user) return null;
 
-  const initial = user.name ? user.name.trim().charAt(0).toUpperCase() : 'U';
-  const memberSince = user.createdAt
-    ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
-    : 'Recently';
-
+  const initial = user?.name ? user.name.trim().charAt(0).toUpperCase() : 'U';
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-indigo-50/30 dark:to-indigo-950/20">
       {/* Hero Banner */}
@@ -68,17 +107,16 @@ const Profile = () => {
             {/* Avatar */}
             <div className="relative mb-6">
               <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full bg-white/20 backdrop-blur-md border-4 border-white/30 flex items-center justify-center overflow-hidden shadow-2xl">
-                {user.picture ? (
+                {/* {user.picture ? (
                   <img src={user.picture} alt="Profile" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="text-5xl sm:text-6xl font-bold text-white">{initial}</span>
-                )}
+                ) : ( */}
+                <span className="text-5xl sm:text-6xl font-bold text-white">{initial}</span>
+                {/* ) */}
               </div>
-              <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-green-500 rounded-full border-4 border-indigo-600 dark:border-indigo-800" />
             </div>
 
             <h1 className="text-3xl sm:text-4xl font-extrabold text-white mb-2">
-              {user.name || 'Traveler'}
+              {user?.name || 'Traveler'}
             </h1>
             <p className="text-indigo-200 text-lg">{user.email || ''}</p>
           </motion.div>
@@ -92,12 +130,12 @@ const Profile = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.2 }}
-          className="grid grid-cols-3 gap-4 mb-8"
+          className="flex justify-center gap-4 mb-8"
         >
           {[
-            { label: 'Trips Planned', value: '3', icon: '✈️' },
-            { label: 'Destinations', value: '7', icon: '📍' },
-            { label: 'Days Traveling', value: '21', icon: '📅' },
+            { label: 'Trips Planned', value: tripCount.toString(), icon: '✈️' },
+            // { label: 'Destinations', value: '7', icon: '📍' },
+            // { label: 'Days Traveling', value: '21', icon: '📅' },
           ].map((stat, i) => (
             <div
               key={i}
@@ -117,28 +155,101 @@ const Profile = () => {
           transition={{ duration: 0.5, delay: 0.3 }}
           className="bg-white dark:bg-gray-800/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700/50 p-6 sm:p-8 mb-8"
         >
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-            <span className="w-8 h-8 bg-indigo-100 dark:bg-indigo-500/20 rounded-lg flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-              ⚙️
-            </span>
-            Account Details
-          </h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+              <span className="w-8 h-8 bg-indigo-100 dark:bg-indigo-500/20 rounded-lg flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+                ⚙️
+              </span>
+              Account Details
+            </h2>
+            {!isEditing && (
+              <button
+                onClick={handleEditClick}
+                className="text-sm font-medium text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
+              >
+                Edit Profile
+              </button>
+            )}
+          </div>
+
+          {message && (
+            <div className={`mb-4 p-3 rounded-xl text-sm font-medium ${message.type === 'error'
+              ? 'bg-red-50 text-red-600 dark:bg-red-500/10 dark:text-red-400'
+              : 'bg-green-50 text-green-600 dark:bg-green-500/10 dark:text-green-400'
+              }`}>
+              {message.text}
+            </div>
+          )}
 
           <div className="space-y-5">
-            {[
-              { label: 'Full Name', value: user.name || 'Not set', icon: '👤' },
-              { label: 'Email Address', value: user.email || 'Not set', icon: '📧' },
-              { label: 'Member Since', value: memberSince, icon: '📅' },
-            ].map((field, i) => (
-              <div key={i} className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
-                <span className="text-xl">{field.icon}</span>
-                <div className="flex-1">
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{field.label}</p>
-                  <p className="text-base font-semibold text-gray-900 dark:text-white mt-0.5">{field.value}</p>
-                </div>
+            {/* Full Name */}
+            <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
+              <span className="text-xl">👤</span>
+              <div className="flex-1">
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Full Name</p>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editForm.name}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                ) : (
+                  <p className="text-base font-semibold text-gray-900 dark:text-white mt-0.5">{user.name || 'Not set'}</p>
+                )}
               </div>
-            ))}
+            </div>
+
+            {/* Email Address */}
+            <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
+              <span className="text-xl">📧</span>
+              <div className="flex-1">
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Email Address</p>
+                {isEditing ? (
+                  <input
+                    type="email"
+                    value={editForm.email}
+                    onChange={(e) => setEditForm(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  />
+                ) : (
+                  <p className="text-base font-semibold text-gray-900 dark:text-white mt-0.5">{user.email || 'Not set'}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Member Since */}
+            <div className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-gray-700/30 rounded-xl">
+              <span className="text-xl">📅</span>
+              <div className="flex-1">
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Member Since</p>
+                <p className="text-base font-semibold text-gray-900 dark:text-white mt-0.5">
+                  {user.createdAt
+                    ? new Date(user.createdAt).toLocaleDateString('en-US', { dateStyle: 'long' })
+                    : 'Unavailable'}
+                </p>
+              </div>
+            </div>
           </div>
+
+          {isEditing && (
+            <div className="mt-6 flex gap-3 justify-end">
+              <button
+                onClick={handleCancel}
+                disabled={isSaving}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={isSaving}
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-700 transition-colors disabled:opacity-70"
+              >
+                {isSaving ? 'Saving...' : 'Save Changes'}
+              </button>
+            </div>
+          )}
         </motion.div>
 
         {/* Quick Actions */}

@@ -1,9 +1,10 @@
+
 const BASE_URL = "http://127.0.0.1:5000";
 
-/** Helper – returns the stored JWT or null */
+
 const getToken = (): string | null => localStorage.getItem("token");
 
-/** Build an Authorization header object when a token is present */
+
 const authHeaders = (): Record<string, string> => {
   const token = getToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
@@ -35,6 +36,23 @@ export const signup = async (data: { name: string; email: string; password: stri
   return response.json();
 };
 
+export const update = async (data: { name?: string; email?: string; }) => {
+  const res = await fetch(`${BASE_URL}/users/update`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      ...authHeaders(),
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || `Failed to update profile (${res.status})`);
+  }
+
+  return res.json();
+};
 
 export const generateItinerary = async (data: {
   destination: string;
@@ -71,9 +89,8 @@ export const generateItinerary = async (data: {
 };
 
 
-// ─── My Trips ────────────────────────────────────────────────────────────────
+// ────────────────── My Trips ─────────────────────────────
 
-/** Fetch all trips for the currently authenticated user */
 export const getUserTrips = async (userId: string) => {
   const res = await fetch(`${BASE_URL}/api/trips/${userId}`, {
     method: "GET",
@@ -107,3 +124,12 @@ export const fetchPackages = async () => {
 
   return res.json();
 };
+
+export interface User {
+  id: string,
+  name: string,
+  email: string,
+  // picture?: string,
+  createdAt: string,
+  updatedAt: string
+}

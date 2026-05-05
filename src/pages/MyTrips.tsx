@@ -137,7 +137,7 @@ const MyTrips = () => {
   };
 
   const handleCreateTrip = () => {
-    navigate('/trip-details');
+    navigate('/');
   };
 
   // ── Not Logged In ──
